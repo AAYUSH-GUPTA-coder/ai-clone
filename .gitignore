@@ -1,0 +1,16 @@
+.DS_Store
+.venv/
+__pycache__/
+*.pyc
+.env
+.env.local
+
+# Runtime data
+app.db
+app.db-journal
+data/
+chroma/
+
+# IDE
+.vscode/
+.idea/

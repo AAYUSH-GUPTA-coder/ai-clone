@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}AI Clone{% endblock %}</title>
+  <style>
+    :root { color-scheme: light dark; --b: #e5e7eb; --m: #6b7280; }
+    * { box-sizing: border-box; }
+    body { font: 15px/1.5 -apple-system, system-ui, sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
+    h1 { margin: 0 0 .25rem; font-size: 1.6rem; }
+    .sub { color: var(--m); margin: 0 0 1.5rem; }
+    label { display: block; margin: 1rem 0 .25rem; font-weight: 600; }
+    input, textarea, select, button {
+      font: inherit; width: 100%; padding: .55rem .7rem; border: 1px solid var(--b);
+      border-radius: 8px; background: transparent; color: inherit;
+    }
+    textarea { min-height: 90px; resize: vertical; }
+    button { background: #111827; color: #fff; border: 0; cursor: pointer; font-weight: 600; }
+    button:hover { opacity: .9; }
+    .row { display: flex; gap: .5rem; }
+    .row > * { flex: 1; }
+    .card { border: 1px solid var(--b); border-radius: 12px; padding: 1rem 1.25rem; margin: 1rem 0; }
+    .muted { color: var(--m); font-size: .9rem; }
+    code, pre { background: rgba(127,127,127,.12); padding: .15rem .35rem; border-radius: 6px; }
+    a { color: inherit; }
+  </style>
+</head>
+<body>
+  {% block body %}{% endblock %}
+</body>
+</html>

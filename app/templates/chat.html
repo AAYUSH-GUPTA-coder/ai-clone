@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Chat with {{ name }}{% endblock %}
+{% block body %}
+  <h1>Chat with {{ name }}'s clone</h1>
+  <p class="sub muted">Powered by the owner's API key. Be reasonable.</p>
+
+  <div id="log" class="card" style="min-height: 280px; max-height: 60vh; overflow-y: auto; white-space: pre-wrap;"></div>
+
+  <form id="f" onsubmit="send(event)">
+    <div class="row">
+      <input id="msg" placeholder="Ask anything…" autocomplete="off" required>
+      <button type="submit" style="flex: 0 0 auto; width: auto; padding-left: 1.25rem; padding-right: 1.25rem;">Send</button>
+    </div>
+  </form>
+
+  <script>
+    const slug = {{ slug | tojson }};
+    const log = document.getElementById('log');
+    const msg = document.getElementById('msg');
+    const history = [];
+
+    function add(role, text) {
+      const div = document.createElement('div');
+      div.style.margin = '.5rem 0';
+      div.innerHTML = `<strong>${role === 'user' ? 'You' : 'Clone'}:</strong> <span></span>`;
+      div.querySelector('span').textContent = text;
+      log.appendChild(div);
+      log.scrollTop = log.scrollHeight;
+      return div.querySelector('span');
+    }
+
+    async function send(e) {
+      e.preventDefault();
+      const text = msg.value.trim();
+      if (!text) return;
+      add('user', text);
+      msg.value = '';
+      const target = add('model', '');
+      let acc = '';
+
+      const res = await fetch(`/api/chat/${slug}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text, history }),
+      });
+      if (!res.ok || !res.body) {
+        target.textContent = `(error: ${res.status})`;
+        return;
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        const parts = buf.split('\n\n');
+        buf = parts.pop();
+        for (const part of parts) {
+          const line = part.replace(/^data: /, '');
+          if (line === '[DONE]') continue;
+          try {
+            const obj = JSON.parse(line);
+            if (obj.token) {
+              acc += obj.token;
+              target.textContent = acc;
+              log.scrollTop = log.scrollHeight;
+            } else if (obj.error) {
+              target.textContent = `(error: ${obj.error})`;
+            }
+          } catch {}
+        }
+      }
+      history.push({ role: 'user', content: text });
+      history.push({ role: 'model', content: acc });
+    }
+  </script>
+{% endblock %}

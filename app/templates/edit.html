@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Edit {{ name }}'s clone{% endblock %}
+{% block body %}
+  <h1>Edit {{ name }}'s clone</h1>
+  <p class="sub">Changes take effect immediately.</p>
+
+  {% if saved %}
+  <div class="card" style="border-color: #34d399;">
+    Saved. <a href="{{ share_url }}">View chat →</a>
+  </div>
+  {% endif %}
+
+  <form method="post" enctype="multipart/form-data">
+    <label for="name">Clone name</label>
+    <input id="name" name="name" required value="{{ name }}" maxlength="60">
+
+    <label for="system_prompt">Voice / extra instructions</label>
+    <textarea id="system_prompt" name="system_prompt">{{ system_prompt }}</textarea>
+
+    <label for="new_api_key">New API key (leave blank to keep current)</label>
+    <input id="new_api_key" name="new_api_key" type="password" placeholder="AIza… or leave blank">
+
+    <label for="files">Replace knowledge files (optional — leave blank to keep current)</label>
+    <input id="files" name="files" type="file" multiple accept=".pdf,.txt,.md">
+    <p class="muted">Uploading new files replaces all existing files and re-indexes everything.</p>
+
+    <p></p>
+    <button type="submit">Save changes</button>
+  </form>
+{% endblock %}

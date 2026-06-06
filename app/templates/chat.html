@@ -13,6 +13,12 @@
     </div>
   </form>
 
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    #log > div > span p { margin: .25rem 0; }
+    #log > div > span pre { background: rgba(127,127,127,.12); padding: .5rem; border-radius: 6px; overflow-x: auto; }
+    #log > div > span code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
+  </style>
   <script>
     const slug = {{ slug | tojson }};
     const log = document.getElementById('log');
@@ -64,7 +70,7 @@
             const obj = JSON.parse(line);
             if (obj.token) {
               acc += obj.token;
-              target.textContent = acc;
+              target.innerHTML = marked.parse(acc);
               log.scrollTop = log.scrollHeight;
             } else if (obj.error) {
               target.textContent = `(error: ${obj.error})`;

@@ -47,3 +47,22 @@ def get_clone(slug: str) -> sqlite3.Row | None:
     with connect() as conn:
         cur = conn.execute("SELECT * FROM clones WHERE slug = ?", (slug,))
         return cur.fetchone()
+
+
+def update_clone(
+    slug: str,
+    name: str,
+    system_prompt: str,
+    api_key_encrypted: bytes | None = None,
+) -> None:
+    with connect() as conn:
+        if api_key_encrypted is not None:
+            conn.execute(
+                "UPDATE clones SET name=?, system_prompt=?, api_key_encrypted=? WHERE slug=?",
+                (name, system_prompt, api_key_encrypted, slug),
+            )
+        else:
+            conn.execute(
+                "UPDATE clones SET name=?, system_prompt=? WHERE slug=?",
+                (name, system_prompt, slug),
+            )

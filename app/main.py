@@ -1,6 +1,8 @@
 import json
+import logging
 import os
 import secrets
+import traceback
 from pathlib import Path
 from typing import Iterator
 
@@ -19,6 +21,9 @@ from app.providers.gemini import GeminiProvider
 from app.rag import build_system_prompt, retrieve
 
 load_dotenv()
+
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger(__name__)
 
 ALLOWED_EXTS = {".pdf", ".txt", ".md"}
 MAX_FILE_BYTES = 5 * 1024 * 1024
@@ -85,10 +90,13 @@ async def create_clone(
     try:
         chunk_count = ingest_clone(slug, saved_paths, api_key)
     except Exception as e:
-        # ingest failed (bad key, parse error, etc.) — clean up and report
+        log.error("Ingestion failed for slug %s:\n%s", slug, traceback.format_exc())
         for p in saved_paths:
             p.unlink(missing_ok=True)
-        clone_dir.rmdir()
+        try:
+            clone_dir.rmdir()
+        except OSError:
+            pass
         raise HTTPException(400, f"Ingestion failed: {e}") from e
 
     if chunk_count == 0:

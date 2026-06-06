@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import chromadb
@@ -5,8 +6,8 @@ from pypdf import PdfReader
 
 from app.providers.gemini import GeminiProvider
 
-CHROMA_DIR = Path("chroma")
-DATA_DIR = Path("data")
+CHROMA_DIR = Path(os.environ.get("CHROMA_DIR", "chroma"))
+DATA_DIR = Path(os.environ.get("DATA_DIR", "data"))
 
 MAX_CHARS = 800
 OVERLAP = 100

@@ -1,11 +1,10 @@
 import os
+
 from cryptography.fernet import Fernet
 
-def _fernet() -> Fernet:
-    # secret = os.environ.get("APP_SECRET")
-    secret = os.getenv("APP_SECRET")
-    print(f"secret: ${secret}")
 
+def _fernet() -> Fernet:
+    secret = os.getenv("APP_SECRET")
     if not secret:
         raise RuntimeError(
             "APP_SECRET not set. Generate one with: "

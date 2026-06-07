@@ -74,7 +74,11 @@ class GeminiProvider:
         stream = self._client.models.generate_content_stream(
             model=CHAT_MODEL,
             contents=contents,
-            config=types.GenerateContentConfig(system_instruction=system),
+            config=types.GenerateContentConfig(
+                system_instruction=system,
+                # Allow some reasoning to prevent date/fact hallucination
+                thinking_config=types.ThinkingConfig(thinking_budget=1024),
+            ),
         )
         for chunk in stream:
             if chunk.text:

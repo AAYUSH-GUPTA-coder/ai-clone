@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Admin — {{ name }}{% endblock %}
+{% block body %}
+  <h1>Admin dashboard</h1>
+  <p class="sub">Only you can see this page.</p>
+
+  {% if saved %}
+  <div class="card" style="border-color: #34d399;">
+    ✓ Ingested {{ chunks }} chunks. <a href="/">View chat →</a>
+  </div>
+  {% endif %}
+
+  {% if deleted %}
+  <div class="card" style="border-color: #f87171;">
+    Deleted <strong>{{ deleted }}</strong> and re-indexed remaining files.
+  </div>
+  {% endif %}
+
+  <!-- Current knowledge files -->
+  <h2 style="margin: 1.5rem 0 .5rem; font-size: 1.1rem;">Knowledge files</h2>
+  {% if files %}
+    <ul style="padding-left: 1.25rem;">
+      {% for file in files %}
+      <li style="margin: .35rem 0; display: flex; align-items: center; gap: .75rem;">
+        <span>{{ file }}</span>
+        <form method="post" action="/admin/delete" style="display:inline; width:auto;">
+          <input type="hidden" name="filename" value="{{ file }}">
+          <button type="submit"
+            onclick="return confirm('Delete {{ file }}?')"
+            style="width:auto; padding:.2rem .6rem; background:#ef4444; font-size:.8rem;">
+            Delete
+          </button>
+        </form>
+      </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="muted">No files yet. Upload some below.</p>
+  {% endif %}
+
+  <!-- Upload + ingest -->
+  <h2 style="margin: 1.5rem 0 .5rem; font-size: 1.1rem;">Upload new files</h2>
+  <form method="post" action="/admin/ingest" enctype="multipart/form-data">
+    <label for="uploads">PDF, TXT, or MD — up to 10 files, 5 MB each</label>
+    <input id="uploads" name="uploads" type="file" multiple accept=".pdf,.txt,.md">
+    <p class="muted">New files are added to the existing knowledge base and the index is rebuilt.</p>
+    <p></p>
+    <button type="submit">Upload &amp; re-index</button>
+  </form>
+
+  <!-- Config reminder -->
+  <h2 style="margin: 2rem 0 .5rem; font-size: 1.1rem;">Clone config</h2>
+  <p class="muted">
+    To change the clone name, voice prompt, or API key — edit your <code>.env</code> file and restart the server.
+    On Render or Fly, update the environment variables in the dashboard.
+  </p>
+  <table style="width:100%; border-collapse: collapse; font-size: .9rem;">
+    <tr>
+      <td style="padding: .3rem .5rem; font-weight:600;">APP_NAME</td>
+      <td style="padding: .3rem .5rem;">{{ name }}</td>
+    </tr>
+    <tr>
+      <td style="padding: .3rem .5rem; font-weight:600;">SYSTEM_PROMPT</td>
+      <td style="padding: .3rem .5rem;">{{ system_prompt or "(not set)" }}</td>
+    </tr>
+    <tr>
+      <td style="padding: .3rem .5rem; font-weight:600;">GEMINI_API_KEY</td>
+      <td style="padding: .3rem .5rem;">{{ "●●●●●●●●" }}</td>
+    </tr>
+  </table>
+
+  <p style="margin-top: 1.5rem;"><a href="/">← Back to chat</a></p>
+{% endblock %}

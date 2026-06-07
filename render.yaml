@@ -9,12 +9,14 @@ services:
       mountPath: /data
       sizeGB: 1
     envVars:
-      - key: BASE_URL
-        sync: false          # set this to your Render URL after first deploy
-      - key: APP_SECRET
-        generateValue: true  # Render generates a random value automatically
-      - key: DB_PATH
-        value: /data/app.db
+      - key: GEMINI_API_KEY
+        sync: false          # paste your key in the Render dashboard
+      - key: APP_NAME
+        sync: false          # your name, e.g. "Aayush Gupta"
+      - key: SYSTEM_PROMPT
+        sync: false          # optional, e.g. "Be concise and casual."
+      - key: ADMIN_PASSWORD
+        sync: false          # choose a strong password
       - key: DATA_DIR
         value: /data/uploads
       - key: CHROMA_DIR

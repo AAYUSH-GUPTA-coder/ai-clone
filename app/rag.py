@@ -1,4 +1,4 @@
-from app.ingest import _chroma, collection_name
+from app.ingest import COLLECTION_NAME, _chroma
 from app.providers.gemini import GeminiProvider
 
 TOP_K = 5
@@ -12,10 +12,10 @@ Context:
 """.strip()
 
 
-def retrieve(slug: str, query: str, api_key: str) -> list[str]:
+def retrieve(query: str, api_key: str) -> list[str]:
     provider = GeminiProvider(api_key)
     qvec = provider.embed_query(query)
-    coll = _chroma().get_collection(collection_name(slug))
+    coll = _chroma().get_collection(COLLECTION_NAME)
     res = coll.query(query_embeddings=[qvec], n_results=TOP_K)
     docs = res.get("documents") or [[]]
     return docs[0]

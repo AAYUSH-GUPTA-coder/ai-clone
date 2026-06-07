@@ -8,6 +8,7 @@ from app.providers.gemini import GeminiProvider
 
 CHROMA_DIR = Path(os.environ.get("CHROMA_DIR", "chroma"))
 DATA_DIR = Path(os.environ.get("DATA_DIR", "data"))
+COLLECTION_NAME = "clone_main"
 
 MAX_CHARS = 800
 OVERLAP = 100
@@ -16,10 +17,6 @@ OVERLAP = 100
 def _chroma() -> chromadb.api.ClientAPI:
     CHROMA_DIR.mkdir(exist_ok=True)
     return chromadb.PersistentClient(path=str(CHROMA_DIR))
-
-
-def collection_name(slug: str) -> str:
-    return f"clone_{slug.replace('-', '_')}"
 
 
 def parse_file(path: Path) -> str:
@@ -42,7 +39,6 @@ def chunk_text(text: str) -> list[str]:
     while i < n:
         end = min(i + MAX_CHARS, n)
         if end < n:
-            # try to break on a paragraph or sentence boundary
             for sep in ("\n\n", "\n", ". ", " "):
                 cut = text.rfind(sep, i + MAX_CHARS // 2, end)
                 if cut != -1:
@@ -55,7 +51,7 @@ def chunk_text(text: str) -> list[str]:
     return [c for c in chunks if c]
 
 
-def ingest_clone(slug: str, files: list[Path], api_key: str) -> int:
+def ingest(files: list[Path], api_key: str) -> int:
     """Parse, chunk, embed, store. Returns chunk count."""
     all_chunks: list[str] = []
     all_metas: list[dict] = []
@@ -72,17 +68,22 @@ def ingest_clone(slug: str, files: list[Path], api_key: str) -> int:
     vectors = provider.embed(all_chunks)
 
     client = _chroma()
-    name = collection_name(slug)
-    # fresh collection on each ingest so re-uploads replace old content
     try:
-        client.delete_collection(name)
+        client.delete_collection(COLLECTION_NAME)
     except Exception:
         pass
-    coll = client.create_collection(name=name)
+    coll = client.create_collection(name=COLLECTION_NAME)
     coll.add(
-        ids=[f"{slug}-{i}" for i in range(len(all_chunks))],
+        ids=[str(i) for i in range(len(all_chunks))],
         documents=all_chunks,
         embeddings=vectors,
         metadatas=all_metas,
     )
     return len(all_chunks)
+
+
+def list_files() -> list[Path]:
+    """Return all knowledge files (not subdirs) currently on disk."""
+    if not DATA_DIR.exists():
+        return []
+    return sorted(p for p in DATA_DIR.iterdir() if p.is_file())

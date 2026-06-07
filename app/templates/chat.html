@@ -20,7 +20,6 @@
     #log > div > span code { background: rgba(127,127,127,.12); padding: .1rem .3rem; border-radius: 4px; }
   </style>
   <script>
-    const slug = {{ slug | tojson }};
     const log = document.getElementById('log');
     const msg = document.getElementById('msg');
     const history = [];
@@ -44,7 +43,7 @@
       const target = add('model', '');
       let acc = '';
 
-      const res = await fetch(`/api/chat/${slug}`, {
+      const res = await fetch(`/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: text, history }),

@@ -1,73 +1,308 @@
-{% extends "base.html" %}
-{% block title %}Admin — {{ name }}{% endblock %}
-{% block body %}
-  <h1>Admin dashboard</h1>
-  <p class="sub">Only you can see this page.</p>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin — {{ name }}</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    :root {
+      --bg:       #0f0f0f;
+      --surface:  #1a1a1a;
+      --surface2: #222222;
+      --border:   #2a2a2a;
+      --accent:   #3b82f6;
+      --danger:   #ef4444;
+      --success:  #22c55e;
+      --text:     #f0f0f0;
+      --muted:    #6b7280;
+      --radius:   12px;
+    }
+
+    html, body {
+      min-height: 100%; background: var(--bg); color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 15px; line-height: 1.5;
+    }
+
+    /* ── Layout ── */
+    .shell { max-width: 760px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+
+    /* ── Top bar ── */
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 2rem;
+    }
+    .topbar-left { display: flex; align-items: center; gap: .75rem; }
+    .avatar {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: var(--accent); display: flex; align-items: center;
+      justify-content: center; font-weight: 700; font-size: 1rem; flex-shrink: 0;
+    }
+    .topbar h1 { font-size: 1.2rem; font-weight: 700; }
+    .topbar .sub { font-size: .8rem; color: var(--muted); }
+    .btn-ghost {
+      display: inline-flex; align-items: center; gap: .4rem;
+      padding: .45rem .9rem; border-radius: 8px; border: 1px solid var(--border);
+      color: var(--muted); font: inherit; font-size: .85rem; cursor: pointer;
+      background: transparent; text-decoration: none; transition: border-color .15s, color .15s;
+    }
+    .btn-ghost:hover { border-color: var(--text); color: var(--text); }
+
+    /* ── Toast banners ── */
+    .toast {
+      display: flex; align-items: center; gap: .6rem;
+      padding: .75rem 1rem; border-radius: var(--radius);
+      border: 1px solid; margin-bottom: 1.25rem; font-size: .9rem;
+      animation: slideIn .2s ease;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .toast.success { border-color: var(--success); background: rgba(34,197,94,.08); color: #86efac; }
+    .toast.warning { border-color: #f59e0b;        background: rgba(245,158,11,.08); color: #fcd34d; }
+    .toast a { color: inherit; font-weight: 600; }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.25rem 1.5rem; margin-bottom: 1.25rem;
+    }
+    .card-title {
+      font-size: .7rem; font-weight: 700; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 1rem;
+    }
+
+    /* ── File list ── */
+    .file-list { display: flex; flex-direction: column; gap: .5rem; }
+    .file-item {
+      display: flex; align-items: center; gap: .75rem;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; padding: .6rem .9rem;
+      transition: border-color .15s;
+    }
+    .file-item:hover { border-color: #3a3a3a; }
+    .file-icon {
+      width: 34px; height: 34px; border-radius: 7px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .65rem; font-weight: 800; letter-spacing: .02em;
+    }
+    .file-icon.pdf { background: rgba(239,68,68,.15);  color: #f87171; }
+    .file-icon.txt { background: rgba(59,130,246,.15); color: #93c5fd; }
+    .file-icon.md  { background: rgba(168,85,247,.15); color: #c4b5fd; }
+    .file-icon.other { background: rgba(107,114,128,.15); color: #9ca3af; }
+    .file-name { flex: 1; font-size: .9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .btn-delete {
+      flex-shrink: 0; padding: .3rem .65rem; border-radius: 6px;
+      border: 1px solid transparent; background: transparent;
+      color: var(--muted); font: inherit; font-size: .8rem; cursor: pointer;
+      transition: background .15s, color .15s, border-color .15s;
+    }
+    .btn-delete:hover { background: rgba(239,68,68,.12); color: #f87171; border-color: rgba(239,68,68,.3); }
+
+    .empty-state {
+      text-align: center; padding: 1.75rem 1rem; color: var(--muted);
+    }
+    .empty-state .empty-icon { font-size: 2rem; margin-bottom: .5rem; }
+    .empty-state p { font-size: .88rem; }
+
+    /* ── Upload zone ── */
+    .drop-zone {
+      border: 2px dashed var(--border); border-radius: var(--radius);
+      padding: 2rem 1rem; text-align: center; cursor: pointer;
+      transition: border-color .2s, background .2s; position: relative;
+      background: transparent;
+    }
+    .drop-zone:hover, .drop-zone.over {
+      border-color: var(--accent); background: rgba(59,130,246,.05);
+    }
+    .drop-zone input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .drop-icon { font-size: 2rem; margin-bottom: .5rem; }
+    .drop-label { font-size: .9rem; color: var(--text); margin-bottom: .25rem; }
+    .drop-label strong { color: var(--accent); }
+    .drop-hint { font-size: .78rem; color: var(--muted); }
+    .file-chips { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .9rem; justify-content: center; }
+    .chip {
+      display: inline-flex; align-items: center; gap: .3rem;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 20px; padding: .2rem .65rem; font-size: .78rem; color: var(--text);
+    }
+
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: .5rem;
+      margin-top: 1rem; padding: .6rem 1.25rem; border-radius: 8px;
+      background: var(--accent); color: #fff; border: none; font: inherit;
+      font-size: .9rem; font-weight: 600; cursor: pointer;
+      transition: background .15s, transform .1s; width: 100%; justify-content: center;
+    }
+    .btn-primary:hover   { background: #1d4ed8; }
+    .btn-primary:active  { transform: scale(.98); }
+    .btn-primary:disabled { background: var(--border); color: var(--muted); cursor: default; }
+
+    /* ── Config table ── */
+    .config-row {
+      display: flex; align-items: flex-start; gap: 1rem;
+      padding: .65rem 0; border-bottom: 1px solid var(--border);
+    }
+    .config-row:last-child { border-bottom: none; }
+    .config-key {
+      width: 140px; flex-shrink: 0; font-size: .8rem; font-weight: 600;
+      color: var(--muted); font-family: "SF Mono", monospace; padding-top: .05rem;
+    }
+    .config-val { font-size: .88rem; color: var(--text); word-break: break-all; }
+    .config-val.masked { letter-spacing: .1em; color: var(--muted); }
+
+    code {
+      background: rgba(255,255,255,.07); padding: .1rem .35rem;
+      border-radius: 5px; font-family: "SF Mono", monospace; font-size: .85em;
+    }
+  </style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="avatar" id="av"></div>
+      <div>
+        <div class="topbar h1" style="font-size:1.2rem;font-weight:700;">Admin dashboard</div>
+        <div class="sub">Only you can see this</div>
+      </div>
+    </div>
+    <a href="/" class="btn-ghost">
+      ← View chat
+    </a>
+  </div>
+
+  <!-- Toasts -->
   {% if saved %}
-  <div class="card" style="border-color: #34d399;">
-    ✓ Ingested {{ chunks }} chunks. <a href="/">View chat →</a>
+  <div class="toast success">
+    <span>✓</span>
+    <span>Indexed <strong>{{ chunks }}</strong> chunks successfully. <a href="/">Open chat →</a></span>
   </div>
   {% endif %}
 
   {% if deleted %}
-  <div class="card" style="border-color: #f87171;">
-    Deleted <strong>{{ deleted }}</strong> and re-indexed remaining files.
+  <div class="toast warning">
+    <span>🗑</span>
+    <span><strong>{{ deleted }}</strong> deleted and index rebuilt.</span>
   </div>
   {% endif %}
 
-  <!-- Current knowledge files -->
-  <h2 style="margin: 1.5rem 0 .5rem; font-size: 1.1rem;">Knowledge files</h2>
-  {% if files %}
-    <ul style="padding-left: 1.25rem;">
+  <!-- Knowledge files -->
+  <div class="card">
+    <div class="card-title">Knowledge files</div>
+
+    {% if files %}
+    <div class="file-list">
       {% for file in files %}
-      <li style="margin: .35rem 0; display: flex; align-items: center; gap: .75rem;">
-        <span>{{ file }}</span>
-        <form method="post" action="/admin/delete" style="display:inline; width:auto;">
+      {% set ext = file.rsplit('.', 1)[-1].lower() if '.' in file else 'other' %}
+      <div class="file-item">
+        <div class="file-icon {{ ext if ext in ['pdf','txt','md'] else 'other' }}">
+          {{ ext.upper() }}
+        </div>
+        <span class="file-name" title="{{ file }}">{{ file }}</span>
+        <form method="post" action="/admin/delete" style="display:contents;">
           <input type="hidden" name="filename" value="{{ file }}">
-          <button type="submit"
-            onclick="return confirm('Delete {{ file }}?')"
-            style="width:auto; padding:.2rem .6rem; background:#ef4444; font-size:.8rem;">
+          <button class="btn-delete" type="submit"
+            onclick="return confirm('Delete {{ file }}?')">
             Delete
           </button>
         </form>
-      </li>
+      </div>
       {% endfor %}
-    </ul>
-  {% else %}
-    <p class="muted">No files yet. Upload some below.</p>
-  {% endif %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">📂</div>
+      <p>No files yet — upload something below to power your clone.</p>
+    </div>
+    {% endif %}
+  </div>
 
-  <!-- Upload + ingest -->
-  <h2 style="margin: 1.5rem 0 .5rem; font-size: 1.1rem;">Upload new files</h2>
-  <form method="post" action="/admin/ingest" enctype="multipart/form-data">
-    <label for="uploads">PDF, TXT, or MD — up to 10 files, 5 MB each</label>
-    <input id="uploads" name="uploads" type="file" multiple accept=".pdf,.txt,.md">
-    <p class="muted">New files are added to the existing knowledge base and the index is rebuilt.</p>
-    <p></p>
-    <button type="submit">Upload &amp; re-index</button>
-  </form>
+  <!-- Upload -->
+  <div class="card">
+    <div class="card-title">Upload knowledge files</div>
+    <form method="post" action="/admin/ingest" enctype="multipart/form-data" id="upload-form">
+      <div class="drop-zone" id="drop-zone">
+        <input type="file" name="uploads" id="file-input" multiple accept=".pdf,.txt,.md">
+        <div class="drop-icon">☁️</div>
+        <div class="drop-label">Drop files here or <strong>browse</strong></div>
+        <div class="drop-hint">PDF, TXT, MD · up to 10 files · 5 MB each</div>
+        <div class="file-chips" id="chips"></div>
+      </div>
+      <button class="btn-primary" id="upload-btn" type="submit" disabled>
+        Upload &amp; re-index
+      </button>
+    </form>
+  </div>
 
-  <!-- Config reminder -->
-  <h2 style="margin: 2rem 0 .5rem; font-size: 1.1rem;">Clone config</h2>
-  <p class="muted">
-    To change the clone name, voice prompt, or API key — edit your <code>.env</code> file and restart the server.
-    On Render or Fly, update the environment variables in the dashboard.
-  </p>
-  <table style="width:100%; border-collapse: collapse; font-size: .9rem;">
-    <tr>
-      <td style="padding: .3rem .5rem; font-weight:600;">APP_NAME</td>
-      <td style="padding: .3rem .5rem;">{{ name }}</td>
-    </tr>
-    <tr>
-      <td style="padding: .3rem .5rem; font-weight:600;">SYSTEM_PROMPT</td>
-      <td style="padding: .3rem .5rem;">{{ system_prompt or "(not set)" }}</td>
-    </tr>
-    <tr>
-      <td style="padding: .3rem .5rem; font-weight:600;">GEMINI_API_KEY</td>
-      <td style="padding: .3rem .5rem;">{{ "●●●●●●●●" }}</td>
-    </tr>
-  </table>
+  <!-- Config -->
+  <div class="card">
+    <div class="card-title">Clone config</div>
+    <div class="config-row">
+      <span class="config-key">APP_NAME</span>
+      <span class="config-val">{{ name }}</span>
+    </div>
+    <div class="config-row">
+      <span class="config-key">SYSTEM_PROMPT</span>
+      <span class="config-val">{{ system_prompt or "(not set)" }}</span>
+    </div>
+    <div class="config-row">
+      <span class="config-key">GEMINI_API_KEY</span>
+      <span class="config-val masked">●●●●●●●●●●●●</span>
+    </div>
+    <p style="margin-top:1rem; font-size:.82rem; color:var(--muted);">
+      To change these values, edit your <code>.env</code> file and restart — or update the environment variables in your hosting dashboard.
+    </p>
+  </div>
 
-  <p style="margin-top: 1.5rem;"><a href="/">← Back to chat</a></p>
-{% endblock %}
+</div>
+
+<script>
+  // Avatar initials
+  const name  = {{ name | tojson }};
+  const init  = name.trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  document.getElementById('av').textContent = init;
+
+  // Drop zone
+  const zone  = document.getElementById('drop-zone');
+  const inp   = document.getElementById('file-input');
+  const chips = document.getElementById('chips');
+  const btn   = document.getElementById('upload-btn');
+
+  function updateChips() {
+    chips.innerHTML = '';
+    btn.disabled = inp.files.length === 0;
+    Array.from(inp.files).forEach(f => {
+      const c = document.createElement('span');
+      c.className = 'chip';
+      c.textContent = f.name;
+      chips.appendChild(c);
+    });
+  }
+
+  inp.addEventListener('change', updateChips);
+
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('over'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('over'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('over');
+    inp.files = e.dataTransfer.files;
+    updateChips();
+  });
+
+  // Show spinner on submit
+  document.getElementById('upload-form').addEventListener('submit', () => {
+    btn.disabled = true;
+    btn.textContent = 'Uploading…';
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+.env
+.git
+.gitignore
+__pycache__
+*.pyc
+*.pyo
+data/
+chroma/
+app.db
+*.md
+check_api.py
+render.yaml

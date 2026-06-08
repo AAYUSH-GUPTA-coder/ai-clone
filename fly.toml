@@ -1,5 +1,5 @@
-app = "ai-clone"
-primary_region = "ord"
+app = "aayush-ai-clone"
+primary_region = "sin"
 
 [build]
 

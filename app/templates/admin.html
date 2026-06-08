@@ -217,6 +217,11 @@
       </div>
       {% endfor %}
     </div>
+    <form method="post" action="/admin/reindex" style="margin-top:1rem;">
+      <button class="btn-primary" id="reindex-btn" type="submit" style="background:#16a34a;">
+        ↻ Re-index all files
+      </button>
+    </form>
     {% else %}
     <div class="empty-state">
       <div class="empty-icon">📂</div>
@@ -302,6 +307,13 @@
   document.getElementById('upload-form').addEventListener('submit', () => {
     btn.disabled = true;
     btn.textContent = 'Uploading…';
+  });
+
+  // Re-index spinner
+  document.querySelector('form[action="/admin/reindex"]')?.addEventListener('submit', function() {
+    const b = this.querySelector('button');
+    b.disabled = true;
+    b.textContent = 'Indexing…';
   });
 </script>
 </body>

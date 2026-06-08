@@ -14,9 +14,15 @@ Context:
 
 
 def retrieve(query: str, api_key: str) -> list[str]:
+    try:
+        coll = _chroma().get_collection(COLLECTION_NAME)
+    except Exception:
+        # Collection doesn't exist yet — no files have been indexed
+        return []
+    if coll.count() == 0:
+        return []
     provider = GeminiProvider(api_key)
     qvec = provider.embed_query(query)
-    coll = _chroma().get_collection(COLLECTION_NAME)
     res = coll.query(query_embeddings=[qvec], n_results=TOP_K, include=["documents", "distances"])
     docs      = (res.get("documents") or [[]])[0]
     distances = (res.get("distances") or [[]])[0]

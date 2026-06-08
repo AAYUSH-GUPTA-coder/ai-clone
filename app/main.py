@@ -136,6 +136,34 @@ def admin_page(request: Request, _: str = Depends(_require_admin)) -> HTMLRespon
     )
 
 
+@app.post("/admin/reindex", response_class=HTMLResponse)
+async def admin_reindex(
+    request: Request,
+    _: str = Depends(_require_admin),
+) -> HTMLResponse:
+    """Re-index all existing files without uploading new ones."""
+    existing = list_files()
+    if not existing:
+        raise HTTPException(400, "No files to index. Upload some files first.")
+    try:
+        chunk_count = ingest(existing, _api_key())
+    except Exception as e:
+        log.error("Re-index error:\n%s", traceback.format_exc())
+        raise HTTPException(400, f"Indexing failed: {e}") from e
+
+    return templates.TemplateResponse(
+        request,
+        "admin.html",
+        {
+            "name": _clone_name(),
+            "system_prompt": _system_prompt(),
+            "files": [f.name for f in list_files()],
+            "saved": True,
+            "chunks": chunk_count,
+        },
+    )
+
+
 @app.post("/admin/ingest", response_class=HTMLResponse)
 async def admin_ingest(
     request: Request,
